@@ -1,0 +1,9 @@
+CELERY_BROKER_URL=redis://redis:6379/0
+CELERY_RESULT_BACKEND=redis://redis:6379/0
+# CELERY_BROKER_URL=redis://localhost:6379/0
+# CELERY_RESULT_BACKEND=redis://localhost:6379/0
+
+NRMOCK_SERVICE_URL=http://host.docker.internal:8001
+DATA_SERVICE_URL=http://host.docker.internal:8000
+# NRMOCK_SERVICE_URL=http://localhost:8001
+# DATA_SERVICE_URL=http://localhost:8000

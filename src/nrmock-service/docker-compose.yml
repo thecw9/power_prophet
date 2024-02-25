@@ -1,0 +1,63 @@
+version: "3"
+
+services:
+  postgres:
+    container_name: nrmock_db
+    image: postgres:16
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - 172.17.0.1:5432:5432
+    volumes:
+      - ./pcs9700.sql:/docker-entrypoint-initdb.d/init.sql
+    command: ["docker-entrypoint.sh", "postgres", "-c", "max_connections=300"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "postgres",
+          "-d",
+          "pcs9700",
+          "-h",
+          "127.0.0.1",
+          "-p",
+          "5432",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 500
+
+  fastapi:
+    container_name: nrmock_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/docs"]
+      interval: 5s
+      timeout: 10s
+      retries: 50
+    ports:
+      - "8001:8000"
+
+  # pgadmin4:
+  #   image: elestio/pgadmin
+  #   container_name: nrmock_pgadmin4
+  #   restart: always
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - "172.17.0.1:5050:5050"
+  #   depends_on:
+  #     - postgres
+  #   volumes:
+  #     - ./servers.json:/pgadmin4/servers.json

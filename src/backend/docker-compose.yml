@@ -1,0 +1,91 @@
+version: "3"
+
+services:
+  redis:
+    container_name: backend_redis
+    image: redis:7.2.4-bookworm
+    restart: always
+
+  postgres:
+    container_name: backend_db
+    image: postgres:16
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    env_file:
+      - .dockerenv
+    ports:
+      - "5433:5432"
+
+  backend_app:
+    container_name: backend_app
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+    # healthcheck:
+    #   test: ["CMD", "curl", "--fail", "http://localhost:8000/docs"]
+    #   interval: 5s
+    #   timeout: 10s
+    #   retries: 50
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  worker:
+    container_name: backend_worker
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    depends_on:
+      redis:
+        condition: service_started
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  beat:
+    container_name: backend_beat
+    build:
+      context: .
+      dockerfile: Dockerfile.beat
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    depends_on:
+      - worker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  flower:
+    container_name: backend_flower
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.flower
+    environment:
+      TZ: Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555"]
+      interval: 5s
+      timeout: 10s
+      retries: 50
+    ports:
+      - 5555:5555
+    depends_on:
+      - worker
+
+volumes:
+  pgdata:
+    driver: local

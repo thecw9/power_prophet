@@ -1,0 +1,21 @@
+# docker-compose.yml
+version: '3'
+
+services:
+  redis:
+    image: "redis:7"
+
+  worker:
+    build:
+      context: ./src/celery_app
+      dockerfile: Dockerfile.worker
+    depends_on:
+      - redis
+
+  beat:
+    build:
+      context: ./src/celery_app
+      dockerfile: Dockerfile.beat
+    depends_on:
+      - redis
+

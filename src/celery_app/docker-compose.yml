@@ -1,0 +1,57 @@
+version: "3"
+
+services:
+  redis:
+    container_name: celery_app_redis
+    image: redis:7.2.4-bookworm
+    restart: always
+
+  worker:
+    container_name: celery_app_worker
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  beat:
+    container_name: celery_app_beat
+    build:
+      context: .
+      dockerfile: Dockerfile.beat
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - .:/app
+    depends_on:
+      - worker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  flower:
+    container_name: celery_app_flower
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.flower
+    environment:
+      TZ: Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/docs"]
+      interval: 5s
+      timeout: 10s
+      retries: 50
+    ports:
+      - 5556:5555
+    env_file:
+      - .dockerenv
+    depends_on:
+      - worker

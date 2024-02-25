@@ -1,0 +1,8 @@
+numpy==1.26.4
+kafka-python==2.0.2
+soundfile==0.12.1
+sounddevice
+python-dotenv==1.0.1
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+gunicorn==21.2.0
