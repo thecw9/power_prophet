@@ -4,6 +4,11 @@ import logging
 from src.config import Config
 from src.storer import WavStorer
 from src.consumer import Consumer
+import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
 
 config = Config()
 

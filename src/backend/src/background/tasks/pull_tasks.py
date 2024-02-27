@@ -42,7 +42,7 @@ def pull_part_discharge():
 
 @celery_app.task(base=MyTask)
 def pull_iron_core():
-    keys = nrmock_service.get_keys_from_nrmock_service(include=["接地电流"])
+    keys = nrmock_service.get_keys_from_nrmock_service(include=["接地", "电流"])
     data = nrmock_service.get_realtime_data_from_nrmock_service(keys)
     response = data_service.store_realtime_data(data)
     data = data_service.model_predict(data)

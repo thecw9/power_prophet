@@ -6,7 +6,11 @@ from lib.pydaq.base import BaseDevice
 from src.config import Config
 from lib.pydaq.microphone import Microphone
 from src.producer import Producer
+import os
+import sys
 
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 config = Config()
 
 

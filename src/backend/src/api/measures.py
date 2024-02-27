@@ -22,7 +22,7 @@ config = Config()
 
 class KeySearchParam(BaseModel):
     include: str = "高抗A相&油色谱 | 高抗B相&接地电流"
-    exclude: str = "红外&高抗A相"
+    exclude: Optional[str] = None
     exclude_no_unit: bool = False
 
 
@@ -36,7 +36,9 @@ async def get_measures_keys_by_keywords(
     :return: keys
     """
     include = keywords.include.replace(" ", "").replace("AND", "&").replace("OR", "|")
-    exclude = keywords.exclude.replace(" ", "").replace("AND", "&").replace("OR", "|")
+    exclude = keywords.exclude
+    if exclude:
+        exclude = exclude.replace(" ", "").replace("AND", "&").replace("OR", "|")
     exclude_no_unit = keywords.exclude_no_unit
 
     statement = select(Measures)

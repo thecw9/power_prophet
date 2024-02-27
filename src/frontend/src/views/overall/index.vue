@@ -27,7 +27,7 @@ const setData = async () => {
           unit: item.unit,
           status:
             item.status === 0
-              ? "未知"
+              ? "模型未训练"
               : item.status === 1
                 ? "正常"
                 : item.status === 2

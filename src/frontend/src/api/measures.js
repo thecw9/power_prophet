@@ -1,6 +1,6 @@
 import axios from "@/utils/csustRequest";
 
-export function getMeasuresInfo(include, exclude = "") {
+export function getMeasuresInfo(include, exclude = null) {
   const params = {
     include: include,
     exclude: exclude,

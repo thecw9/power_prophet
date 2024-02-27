@@ -14,7 +14,7 @@ from src.services.nrmock_service import get_all_measures_info_from_nrmock_servic
 config = Config()
 logger = Logger(__name__)
 
-engine = create_engine(config.DATABASE_URI, echo=False)
+engine = create_engine(config.DATABASE_URI, echo=True)
 
 
 async def init_db():

@@ -105,7 +105,7 @@ const props = defineProps({
 const tableRowClassName = ({ row, rowIndex }) => {
   if (row.status === "正常") {
     return "success-row";
-  } else if (row.status === "报警") {
+  } else if (row.status === "报警" || row.status === "异常") {
     return "error-row";
   }
   return "warning-row";
@@ -233,7 +233,7 @@ const handleViewModelDetailDrawer = async (key) => {
             smooth: true,
           },
           {
-            symbolSize: 10,
+            symbolSize: 3,
             data: train_data.map((item) => [item, 0]),
             type: "scatter",
             xAxisIndex: 1,
@@ -247,6 +247,12 @@ const handleViewModelDetailDrawer = async (key) => {
           textStyle: {
             color: "#ccc",
             fontSize: 16,
+          },
+        },
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
           },
         },
         xAxis: {

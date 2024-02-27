@@ -12,5 +12,5 @@ RUN pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -r re
 COPY . .
 
 # Run the application
-CMD ["python3", "store.py"]
+CMD ["python3", "src/store.py"]
 

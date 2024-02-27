@@ -23,11 +23,16 @@ const setData = async () => {
               time: item.service_time?.replace("T", " ").split(".")[0],
               value: item.value,
               unit: item.unit,
-              status: item.model_is_trained
-                ? item.status === 1
-                  ? "正常"
-                  : "异常"
-                : "模型未训练",
+              status:
+                item.status === 0
+                  ? "模型未训练"
+                  : item.status === 1
+                    ? "正常"
+                    : item.status === 2
+                      ? "预警"
+                      : item.status === 3
+                        ? "报警"
+                        : "未知",
               model_name: item.model_name,
               is_trained: item.model_is_trained ? "已训练" : "未训练",
               model_updated_at: item.model_updated_at

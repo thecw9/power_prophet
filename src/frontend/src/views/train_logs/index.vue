@@ -18,6 +18,15 @@ const handleClose = () => {
     .catch(() => {});
 };
 
+const tableRowClassName = ({ row, rowIndex }) => {
+  if (row.state === "SUCCESS") {
+    return "success-row";
+  } else if (row.state === "FAILURE") {
+    return "error-row";
+  }
+  return "warning-row";
+};
+
 // get train logs list data
 const setTrainLogsListData = async () => {
   const res = await getTrainLogsList(
@@ -93,7 +102,11 @@ onUnmounted(() => {
 
     <!-- 用户列表 -->
     <div class="table-box">
-      <el-table :data="trainlogs" style="width: 100%">
+      <el-table
+        :data="trainlogs"
+        style="width: 100%"
+        :row-class-name="tableRowClassName"
+      >
         <!-- <el-table-column prop="id" label="ID" /> -->
         <el-table-column
           prop="task_name"

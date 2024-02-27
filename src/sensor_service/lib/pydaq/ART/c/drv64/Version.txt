@@ -1,0 +1,14 @@
+art@art:~/桌面$ uname -a
+Linux art 5.11.0-27-generic #29~20.04.1-Ubuntu SMP Wed Aug 11 15:58:17 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+art@art:~/桌面$ getconf LONG_BIT
+64
+art@art:~/桌面$ cat /proc/version
+Linux version 5.11.0-27-generic (buildd@lcy01-amd64-019) (gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #29~20.04.1-Ubuntu SMP Wed Aug 11 15:58:17 UTC 2021
+art@art:~/桌面$ lsb_release -a
+No LSB modules are available.
+Distributor ID:	Ubuntu
+Description:	Ubuntu 20.04.3 LTS
+Release:	20.04
+Codename:	focal
+art@art:~/桌面$ 
+

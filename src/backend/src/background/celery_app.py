@@ -30,23 +30,23 @@ celery_app.conf.beat_schedule = {
     # every 1 minute
     "pull_oil_chromatography": {
         "task": "src.background.tasks.pull_tasks.pull_oil_chromatography",
-        "schedule": crontab(minute=1),
-        # "schedule": crontab(hour="*/1"),
+        # "schedule": crontab(minute=1),
+        "schedule": crontab(hour="*/1"),
     },
     "pull_part_discharge": {
         "task": "src.background.tasks.pull_tasks.pull_part_discharge",
-        "schedule": crontab(minute=1),
-        # "schedule": crontab(hour="*/1"),
+        # "schedule": crontab(minute=1),
+        "schedule": crontab(hour="*/1"),
     },
     "pull_iron_core": {
         "task": "src.background.tasks.pull_tasks.pull_iron_core",
-        "schedule": crontab(minute=1),
-        # "schedule": crontab(hour="*/1"),
+        # "schedule": crontab(minute=1),
+        "schedule": crontab(hour="*/1"),
     },
     "diagnose_all_devices": {
         "task": "src.background.tasks.pull_tasks.diagnose_all_devices",
-        "schedule": crontab(minute=1),
-        # "schedule": crontab(hour="*/1"),
+        # "schedule": crontab(minute=1),
+        "schedule": crontab(hour="*/1"),
     },
 }
 
