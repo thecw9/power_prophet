@@ -1,4 +1,5 @@
 from datetime import datetime
+from sqlalchemy.orm import defer, deferred
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -14,6 +15,8 @@ from src.orm_model.base import Base
 from src.orm_model import (
     create_measure_alarms_monthly_table,
     create_device_alarms_monthly_table,
+    Devices,
+    Measures,
 )
 from src import Config
 
@@ -137,12 +140,14 @@ class HistoryAlarmQueryParam(BaseModel):
 async def get_measure_alarm_history(
     data: HistoryAlarmQueryParam, db: Session = Depends(get_db)
 ):
+    print("---" * 20)
+    print("---" * 20)
     start_time = data.start_time
     end_time = data.end_time
     page = data.page
     size = data.size
 
-    # all measures tables
+    # all alarm tables
     tables = [
         table
         for table_name, table in Base.metadata.tables.items()
@@ -156,13 +161,15 @@ async def get_measure_alarm_history(
     statement = union_all(
         *[
             (
-                select(table).where(table.c.time.between(start_time, end_time))
+                select(table, Measures)
+                .join(Measures, table.c.key == Measures.key)
+                .where(table.c.time.between(start_time, end_time))
                 if start_time and end_time
                 else select(table)
             )
             for table in tables
         ]
-    ).order_by(column("time").asc())
+    ).order_by(column("time").desc())
 
     # tatal count
     total_statement = select(func.count()).select_from(statement.alias("t"))
@@ -170,12 +177,18 @@ async def get_measure_alarm_history(
 
     if page and size:
         statement = statement.limit(size).offset((page - 1) * size)
-    result = db.execute(statement).scalars().all()
+    results = db.execute(statement).fetchall()
+
+    results = [r._asdict() for r in results]
+
+    # TODO: optimize
+    for r in results:
+        r["model"] = None
 
     return {
         "code": 200,
         "message": "success",
-        "data": result,
+        "data": results,
         "total": total_count,
     }
 
@@ -203,13 +216,16 @@ async def get_device_alarm_history(
     statement = union_all(
         *[
             (
-                select(table).where(table.c.time.between(start_time, end_time))
+                select(table, Devices)
+                .options(defer(Devices.model))
+                .join(Devices, table.c.key == Devices.key)
+                .where(table.c.time.between(start_time, end_time))
                 if start_time and end_time
                 else select(table)
             )
             for table in tables
         ]
-    ).order_by(column("time").asc())
+    ).order_by(column("time").desc())
 
     # tatal count
     total_statement = select(func.count()).select_from(statement.alias("t"))
@@ -217,7 +233,12 @@ async def get_device_alarm_history(
 
     if page and size:
         statement = statement.limit(size).offset((page - 1) * size)
-    result = db.execute(statement).scalars().all()
+    result = db.execute(statement)
+    result = [r._asdict() for r in result]
+
+    # TODO: optimize
+    for r in result:
+        r["model"] = None
 
     return {
         "code": 200,

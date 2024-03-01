@@ -1,5 +1,6 @@
 from datetime import datetime
 from sqlalchemy.sql.expression import func
+from sqlalchemy.orm import deferred, defer
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -41,7 +42,7 @@ async def get_measures_keys_by_keywords(
         exclude = exclude.replace(" ", "").replace("AND", "&").replace("OR", "|")
     exclude_no_unit = keywords.exclude_no_unit
 
-    statement = select(Measures)
+    statement = select(Measures).options(defer(Measures.model))
     if include:
         or_list = []
         for or_keyword in include.split("|"):
@@ -57,11 +58,6 @@ async def get_measures_keys_by_keywords(
         statement = statement.where(Measures.unit != "")
 
     results = db.execute(statement).scalars().all()
-
-    # del model field
-    # TODO: optimize
-    for result in results:
-        del result.model
 
     return {
         "code": 200,
@@ -86,14 +82,13 @@ async def get_measures_info_by_key(
     """
     key = data.key
 
-    statement = select(Measures).where(Measures.key == key)
+    statement = (
+        select(Measures).options(defer(Measures.model)).where(Measures.key == key)
+    )
     result = db.execute(statement).scalar()
 
     if not result:
         raise HTTPException(status_code=404, detail="measures not found")
-
-    # del model field
-    del result.model
 
     return {
         "code": 200,
@@ -111,10 +106,12 @@ async def get_realtime_data(keys: RealtimeDataSearchParam, db=Depends(get_db)):
     if not keys.keys:
         raise HTTPException(status_code=400, detail="keys is empty")
 
-    statement = select(Measures).where(Measures.key.in_(keys.keys))
+    statement = (
+        select(Measures)
+        .options(defer(Measures.model))
+        .where(Measures.key.in_(keys.keys))
+    )
     results = db.execute(statement).scalars().all()
-    for result in results:
-        del result.model
     return {
         "code": 200,
         "message": "success",

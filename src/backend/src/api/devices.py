@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+from sqlalchemy.orm import defer
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -33,7 +34,7 @@ async def get_devices_keys_by_keywords(
     include = keywords.include.replace(" ", "").replace("AND", "&").replace("OR", "|")
     exclude = keywords.exclude.replace(" ", "").replace("AND", "&").replace("OR", "|")
 
-    statement = select(Devices)
+    statement = select(Devices).options(defer(Devices.model))
     if include:
         or_list = []
         for or_keyword in include.split("|"):
@@ -47,11 +48,6 @@ async def get_devices_keys_by_keywords(
             statement = statement.where(~Devices.path.like(f"%{keyword}%"))
 
     results = db.execute(statement).scalars().all()
-
-    # del model field
-    # TODO: optimize
-    for result in results:
-        del result.model
 
     return {
         "code": 200,

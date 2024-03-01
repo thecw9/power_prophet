@@ -23,7 +23,7 @@ const trainDataTimeRange = ref([
 
 const shortcuts = [
   {
-    text: "Today",
+    text: "今天",
     value: () => {
       const end = new Date();
       const start = new Date();
@@ -34,7 +34,7 @@ const shortcuts = [
     },
   },
   {
-    text: "Last 1 day",
+    text: "过去一天",
     value: () => {
       const end = new Date();
       const start = new Date();
@@ -43,7 +43,7 @@ const shortcuts = [
     },
   },
   {
-    text: "Last week",
+    text: "过去一周",
     value: () => {
       const end = new Date();
       const start = new Date();
@@ -52,7 +52,7 @@ const shortcuts = [
     },
   },
   {
-    text: "Last month",
+    text: "过去一个月",
     value: () => {
       const end = new Date();
       const start = new Date();
@@ -61,7 +61,7 @@ const shortcuts = [
     },
   },
   {
-    text: "Last 3 months",
+    text: "过去三个月",
     value: () => {
       const end = new Date();
       const start = new Date();

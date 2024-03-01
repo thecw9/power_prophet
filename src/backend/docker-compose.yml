@@ -33,11 +33,11 @@ services:
       - postgres
     ports:
       - "8000:8000"
-    # healthcheck:
-    #   test: ["CMD", "curl", "--fail", "http://localhost:8000/docs"]
-    #   interval: 5s
-    #   timeout: 10s
-    #   retries: 50
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/docs"]
+      interval: 5s
+      timeout: 10s
+      retries: 50
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -52,6 +52,8 @@ services:
     depends_on:
       redis:
         condition: service_started
+      backend_app:
+        condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

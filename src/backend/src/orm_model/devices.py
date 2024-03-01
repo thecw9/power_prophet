@@ -1,4 +1,5 @@
 from datetime import datetime
+from src import Config
 
 from sqlalchemy import (
     ARRAY,
@@ -14,11 +15,19 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
 
+config = Config()
+
 
 class Devices(Base):
     __tablename__ = "devices"
 
     key: Mapped[int] = mapped_column(BigInteger, primary_key=True, doc="主键")
+    time: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now, onupdate=datetime.now, doc="时间"
+    )
+    status: Mapped[int] = mapped_column(
+        Integer, default=config.ALARM_STATUS["UNKNOWN"], doc="状态"
+    )
     include: Mapped[str] = mapped_column(TEXT, nullable=True, doc="包含")
     exclude: Mapped[str] = mapped_column(TEXT, nullable=True, doc="排除")
     additional_include: Mapped[str] = mapped_column(TEXT, nullable=True, doc="额外包含")

@@ -45,9 +45,13 @@ def get_all_devices_keys() -> list[int]:
     Returns:
         list[int]: devices keys
     """
-    response = requests.get(
+    json_input = {"include": "", "exclude": ""}
+    response = requests.post(
         config.DATA_SERVICE_URL + "/devices-service/info",
+        json=json_input,
     )
+    if response.status_code != 200:
+        raise HTTPException(status_code=400, detail="Failed to get devices keys")
     result = response.json()
     keys = [item["key"] for item in result["data"]]
     return keys
@@ -232,14 +236,22 @@ def store_device_alarm_data(data: list[dict]) -> None:
 
 if __name__ == "__main__":
     keys = get_measure_keys("高抗A相", "")
-    print(keys)
     data = get_history_data(
         [4222126280998916, 4222126197309444],
         datetime(2021, 6, 1),
         datetime(2031, 6, 2),
     )
-    print(data)
 
     # data = get_realtime_data([4222126280998916, 4222126197309444])
     data = get_realtime_data(keys)
-    print(data)
+    data_to_predict = []
+    for k, v in data.items():
+        data_to_predict.append(
+            {"key": k, "time": datetime.now().isoformat(), "value": v}
+        )
+
+    data = model_predict(data_to_predict)
+    store_measure_alarm_data(data)
+
+    keys = get_all_devices_keys()
+    print(keys)

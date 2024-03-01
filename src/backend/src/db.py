@@ -14,7 +14,7 @@ from src.services.nrmock_service import get_all_measures_info_from_nrmock_servic
 config = Config()
 logger = Logger(__name__)
 
-engine = create_engine(config.DATABASE_URI, echo=True)
+engine = create_engine(config.DATABASE_URI, echo=False)
 
 
 async def init_db():
@@ -28,7 +28,7 @@ async def init_db():
     logger.info("init measures table")
     await init_measures_table()
     logger.info("init fusion model table")
-    await init_fusion_model_table()
+    await init_devices_table()
     logger.info("reflect db")
     reflect_db()
 
@@ -98,7 +98,7 @@ async def init_measures_table():
         session.commit()
 
 
-async def init_fusion_model_table():
+async def init_devices_table():
     # check fusion model data is exist
     with Session(engine) as session:
         statement = select(Devices).limit(1)
