@@ -1,8 +1,8 @@
 version: "3"
 
 services:
-  postgres:
-    container_name: nrmock_db
+  power_prophet_nrmock_db:
+    container_name: power_prophet_nrmock_db
     image: postgres:16
     restart: always
     env_file:
@@ -11,6 +11,7 @@ services:
       - 172.17.0.1:5432:5432
     volumes:
       - ./pcs9700.sql:/docker-entrypoint-initdb.d/init.sql
+      - power_prophet_nrmock_pgdata:/var/lib/postgresql/data/
     command: ["docker-entrypoint.sh", "postgres", "-c", "max_connections=300"]
     healthcheck:
       test:
@@ -29,9 +30,11 @@ services:
       interval: 5s
       timeout: 10s
       retries: 500
+    networks:
+      - power_prophet_nrmock_network
 
-  fastapi:
-    container_name: nrmock_app
+  power_prophet_nrmock_app:
+    container_name: power_prophet_nrmock_app
     build:
       context: .
       dockerfile: Dockerfile
@@ -39,7 +42,7 @@ services:
     volumes:
       - .:/app
     depends_on:
-      postgres:
+      power_prophet_nrmock_db:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8000/docs"]
@@ -48,6 +51,8 @@ services:
       retries: 50
     ports:
       - "8001:8000"
+    networks:
+      - power_prophet_nrmock_network
 
   # pgadmin4:
   #   image: elestio/pgadmin
@@ -61,3 +66,10 @@ services:
   #     - postgres
   #   volumes:
   #     - ./servers.json:/pgadmin4/servers.json
+
+volumes:
+  power_prophet_nrmock_pgdata:
+    driver: local
+networks:
+  power_prophet_nrmock_network:
+    driver: bridge

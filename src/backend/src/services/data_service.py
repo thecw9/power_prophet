@@ -1,9 +1,10 @@
+from datetime import datetime
 from typing import Any
+
 import aiohttp
 import numpy as np
-from fastapi import HTTPException
-from datetime import datetime
 import requests
+from fastapi import HTTPException
 
 from src import Config
 
@@ -28,7 +29,6 @@ def get_measure_keys(
         "include": include,
         "exclude": exclude,
     }
-    print(config.DATA_SERVICE_URL + "/measures-service/info")
     response = requests.post(
         config.DATA_SERVICE_URL + "/measures-service/info",
         json=json_input,
@@ -84,6 +84,11 @@ def get_history_data(
         config.DATA_SERVICE_URL + "/measures-service/history",
         json=json_input,
     )
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=400, detail=f"Failed to get history data, {response.json()}"
+        )
+
     result = response.json()
     resp_data = result["data"]
 
@@ -111,7 +116,6 @@ def get_realtime_data(keys: list[int]) -> dict[int, float]:
     Returns:
         dict[int, float]: realtime data with measure key as key and data as value
     """
-    print("get_realtime_data")
     input_json = {"keys": keys}
     response = requests.post(
         config.DATA_SERVICE_URL + "/measures-service/realtime",
@@ -236,6 +240,7 @@ def store_device_alarm_data(data: list[dict]) -> None:
 
 if __name__ == "__main__":
     keys = get_measure_keys("高抗A相", "")
+    print(keys)
     data = get_history_data(
         [4222126280998916, 4222126197309444],
         datetime(2021, 6, 1),

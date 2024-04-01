@@ -1,36 +1,33 @@
+import asyncio
 import logging
 import pickle
-import asyncio
-from sqlalchemy.sql import select, update, insert
-from celery import Task
 from datetime import datetime
 
 import numpy as np
+from celery import Task
+from scipy.interpolate import interp1d
 from sqlalchemy import update
 from sqlalchemy.orm import Session
-
-from src.config import Config
-from src.logger import Logger
-from src.fd_model import GMM1D
-from src.orm_model import Measures, Devices, TrainLogs
+from sqlalchemy.sql import insert, select, update
 from src.background.celery_app import celery_app
-from sqlalchemy.orm import Session
-from src.fd_model.gmm import GMM
+from src.config import Config
 from src.db import engine
-from datetime import datetime
-import numpy as np
-from scipy.interpolate import interp1d
+from src.fd_model import GMM1D
+from src.fd_model.gmm import GMM
+from src.logger import Logger
+from src.orm_model import Devices, Measures, TrainLogs
 from src.services import data_service, nrmock_service
 
 config = Config()
 logger = Logger(__name__)
-db = Session(engine)
 
 
 class ModelTrainTask(Task):
+
     def before_start(self, *args, **kwargs):
         super().before_start(*args, **kwargs)
         self.start_time = datetime.now()
+        db = Session(engine)
         db.execute(
             insert(TrainLogs),
             [
@@ -44,11 +41,13 @@ class ModelTrainTask(Task):
             ],
         )
         db.commit()
+        db.close()
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         super().after_return(status, retval, task_id, args, kwargs, einfo)
         self.end_time = datetime.now()
         runtime = (self.end_time - self.start_time).total_seconds()
+        db = Session(engine)
 
         # retval is a Exception
         if isinstance(retval, Exception):
@@ -66,9 +65,11 @@ class ModelTrainTask(Task):
             ],
         )
         db.commit()
+        db.close()
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         super().on_failure(exc, task_id, args, kwargs, einfo)
+        db = Session(engine)
         db.execute(
             update(TrainLogs),
             [
@@ -78,6 +79,8 @@ class ModelTrainTask(Task):
                 }
             ],
         )
+        db.commit()
+        db.close()
 
 
 def interpolate_data(sensor_data: np.ndarray, target_length: int) -> np.ndarray:
@@ -92,6 +95,7 @@ def interpolate_data(sensor_data: np.ndarray, target_length: int) -> np.ndarray:
 @celery_app.task(base=ModelTrainTask)
 def train_model(key: int, start_time: datetime, end_time: datetime):
     """Train model"""
+    db = Session(engine)
 
     data = data_service.get_history_data([key], start_time, end_time)
     data = data[key]
@@ -138,6 +142,8 @@ def train_model(key: int, start_time: datetime, end_time: datetime):
     data = data_service.model_predict(process_data)
     response = data_service.store_measure_alarm_data(data)
 
+    db.close()
+
     return {
         "status": f"Model trained successfully for measure: {key}",
         "train_data_total": len(train_data),
@@ -153,12 +159,14 @@ def train_fusion_model(
     end_time: datetime,
 ):
     """Train fusion model"""
+    db = Session(engine)
 
     # get measure keys need to be fused
     device = db.query(Devices).filter(Devices.key == key).first()
     if not device:
         logger.error(f"device not found: {key}")
         raise ValueError(f"device not found: {key}")
+    device_key = device.key
     include = device.include
     exclude = device.exclude
     additional_include = device.additional_include
@@ -205,4 +213,6 @@ def train_fusion_model(
     data = data_service.fusion_model_predict([key])
     response = data_service.store_device_alarm_data(data)
 
-    return {"status": f"Model trained successfully for device: {key}"}
+    db.close()
+
+    return {"status": f"Model trained successfully for device: {device_key}"}

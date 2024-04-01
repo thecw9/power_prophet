@@ -1,7 +1,7 @@
 <script setup>
+import { login } from "@/api/auth";
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import { login } from "@/api/auth";
 import { ElNotification } from "element-plus";
 
 const router = useRouter();
@@ -53,41 +53,19 @@ const onSubmit = () => {
 
     <div class="login-panel">
       <h1 class="login-title">大型充油线圈设备运行工况异常预警系统</h1>
-      <el-form
-        :rules="rules"
-        ref="loginFormRef"
-        :model="loginForm"
-        label-width="0px"
-      >
+      <el-form :rules="rules" ref="loginFormRef" :model="loginForm" label-width="0px">
         <el-form-item prop="username">
-          <el-input
-            v-model="loginForm.username"
-            placeholder="请输入用户名"
-            prefix-icon="User"
-            @keyup.enter.native="onSubmit"
-          >
+          <el-input v-model="loginForm.username" placeholder="请输入用户名" prefix-icon="User" @keyup.enter.native="onSubmit">
           </el-input>
         </el-form-item>
         <el-form-item prop="password">
-          <el-input
-            show-password
-            type="password"
-            v-model="loginForm.password"
-            placeholder="请输入密码"
-            prefix-icon="Lock"
-            @keyup.enter.native="onSubmit"
-          >
+          <el-input show-password type="password" v-model="loginForm.password" placeholder="请输入密码" prefix-icon="Lock"
+            @keyup.enter.native="onSubmit">
           </el-input>
         </el-form-item>
-        <el-checkbox
-          class="remember-box opacity-50"
-          v-model="loginForm.remember"
-          >记住密码</el-checkbox
-        >
+        <el-checkbox class="remember-box opacity-50" v-model="loginForm.remember">记住密码</el-checkbox>
         <el-form-item>
-          <el-button type="primary" class="login-btn" @click="onSubmit"
-            >登录</el-button
-          >
+          <el-button type="primary" class="login-btn" @click="onSubmit">登录</el-button>
         </el-form-item>
       </el-form>
     </div>

@@ -1,7 +1,7 @@
 version: "3.7"
 services:
-  frontend:
-    container_name: frontend
+  power_prophet_frontend:
+    container_name: power_prophet_frontend
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,3 +10,9 @@ services:
       - "80:80"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - power_prophet_frontend_network
+
+networks:
+  power_prophet_frontend_network:
+    driver: bridge

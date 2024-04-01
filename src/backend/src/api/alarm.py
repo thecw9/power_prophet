@@ -1,23 +1,21 @@
 from datetime import datetime
-from sqlalchemy.orm import defer, deferred
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import Table, insert, select, union_all, update
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer, deferred
 from sqlalchemy.sql import column, func
-
 from src.db import engine
 from src.dependencies import get_db
-from src.orm_model import Measures, Devices
-from src.orm_model.base import Base
 from src.orm_model import (
-    create_measure_alarms_monthly_table,
-    create_device_alarms_monthly_table,
     Devices,
     Measures,
+    create_device_alarms_monthly_table,
+    create_measure_alarms_monthly_table,
 )
+from src.orm_model.base import Base
+
 from src import Config
 
 router = APIRouter()
@@ -34,7 +32,7 @@ class AlarmStoreParam(BaseModel):
 @router.post("/measure/store")
 async def store_alarm_data(data: list[AlarmStoreParam], db: Session = Depends(get_db)):
     if not data:
-        raise HTTPException(status_code=400, detail="alarm data is empty")
+        return {"code": 200, "message": "alarm data is empty"}
 
     data_dict = [d.model_dump() for d in data]
 
@@ -66,10 +64,12 @@ async def store_alarm_data(data: list[AlarmStoreParam], db: Session = Depends(ge
     table_name = f"measure_alarm_{year}_{month}"
     # check if table exists
     if Base.metadata.tables.get(table_name) is None:
+        print(1)
         table = create_measure_alarms_monthly_table(table_name)
         table.create(engine)
     else:
         table = Table(table_name, Base.metadata, autoload_with=engine)
+        table.create(engine, checkfirst=True)
     db.execute(insert(table), data_dict)
     db.commit()
 
@@ -87,7 +87,7 @@ async def store_device_alarm_data(
     data: list[DeviceAlarmStoreParam], db: Session = Depends(get_db)
 ):
     if not data:
-        raise HTTPException(status_code=400, detail="alarm data is empty")
+        return {"code": 200, "message": "alarm data is empty"}
 
     data_dict = [d.model_dump() for d in data]
 
@@ -123,6 +123,7 @@ async def store_device_alarm_data(
         table.create(engine)
     else:
         table = Table(table_name, Base.metadata, autoload_with=engine)
+        table.create(engine, checkfirst=True)
     db.execute(insert(table), data_dict)
     db.commit()
 
@@ -165,7 +166,7 @@ async def get_measure_alarm_history(
                 .join(Measures, table.c.key == Measures.key)
                 .where(table.c.time.between(start_time, end_time))
                 if start_time and end_time
-                else select(table)
+                else select(table).join(Measures, table.c.key == Measures.key)
             )
             for table in tables
         ]
@@ -222,6 +223,8 @@ async def get_device_alarm_history(
                 .where(table.c.time.between(start_time, end_time))
                 if start_time and end_time
                 else select(table)
+                .options(defer(Devices.model))
+                .join(Devices, table.c.key == Devices.key)
             )
             for table in tables
         ]

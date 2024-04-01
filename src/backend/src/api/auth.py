@@ -3,10 +3,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.orm import Session
-from src import Config
 from src.authentication import generate_token
 from src.dependencies import get_db
 from src.orm_model import AuthUser
+
+from src import Config
 
 config = Config()
 router = APIRouter()
@@ -169,3 +170,37 @@ async def update_user(user: UserUpdate, db: Session = Depends(get_db)):
 
     # return
     return {"code": 200, "message": "success", "data": None}
+
+
+class UserSearch(BaseModel):
+    sub_str: str
+    page: int = 1
+    size: int = 10
+
+
+@router.post("/user/search")
+async def search_user(user: UserSearch, db: Session = Depends(get_db)):
+    # get user list
+    statement = (
+        select(AuthUser)
+        .where(AuthUser.username.like(f"%{user.sub_str}%"))
+        .limit(user.size)
+        .offset((user.page - 1) * user.size)
+    )
+    result = db.execute(statement).scalars().all()
+
+    # get total
+    statement = select(func.count(AuthUser.id)).where(
+        AuthUser.username.like(f"%{user.sub_str}%")
+    )
+    total = db.execute(statement).scalar()
+
+    # return
+    return {
+        "code": 200,
+        "message": "success",
+        "data": {
+            "list": result,
+            "total": total,
+        },
+    }

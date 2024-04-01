@@ -87,7 +87,7 @@ onMounted(() => {
   <DataTable
     :data="data"
     :title="`${form.include}数据展示`"
-    :set-data="setData"
+    @set-data="setData"
   />
 </template>
 

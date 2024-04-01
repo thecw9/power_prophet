@@ -1,21 +1,19 @@
 from datetime import datetime
-from sqlalchemy.sql.expression import func
-from sqlalchemy.orm import deferred, defer
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from kombu.exceptions import MessageStateError
 from pydantic import BaseModel
-from sqlalchemy import Table, and_, insert, or_, select, union_all, update, or_, and_
-from sqlalchemy.orm import Session
+from sqlalchemy import Table, and_, insert, or_, select, union_all, update
+from sqlalchemy.orm import Session, defer, deferred
 from sqlalchemy.sql import column
-
-from src import Config
+from sqlalchemy.sql.expression import func
 from src.db import engine
 from src.dependencies import get_db
-from src.orm_model import Measures
+from src.orm_model import Measures, create_measures_monthly_table
 from src.orm_model.base import Base
-from src.orm_model import create_measures_monthly_table
+
+from src import Config
 
 router = APIRouter()
 config = Config()
@@ -152,6 +150,7 @@ async def store_realtime_data(
         table.create(engine)
     else:
         table = Table(table_name, Base.metadata, autoload_with=engine)
+        table.create(engine, checkfirst=True)
     db.execute(insert(table), data_dict)
     db.commit()
 

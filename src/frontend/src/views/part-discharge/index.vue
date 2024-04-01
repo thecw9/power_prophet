@@ -156,7 +156,7 @@ onBeforeUnmount(() => {
   <DataTable
     :data="data"
     :title="`${form.device}${form.phase}局放在线监测数据`"
-    :set-data="setData"
+    @set-data="setData"
   />
 </template>
 

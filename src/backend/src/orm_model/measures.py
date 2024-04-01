@@ -1,20 +1,21 @@
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     BigInteger,
-    Column,
     Boolean,
+    Column,
     DateTime,
     Float,
     Integer,
     Interval,
+    LargeBinary,
     String,
     Table,
-    JSON,
-    LargeBinary,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
+
 from src import Config
 
 from .base import Base
@@ -83,13 +84,14 @@ def create_measures_monthly_table(table_name: str) -> Table:
     return Table(
         table_name,
         Base.metadata,
-        Column("key", BigInteger, nullable=False, doc="主键"),
+        Column("key", BigInteger, nullable=False, doc="主键", primary_key=True),
         Column("time", DateTime, nullable=False, doc="时间"),
         Column("value", Float, nullable=True, doc="值"),
         Column(
             "service_time",
             DateTime,
             nullable=True,
+            primary_key=True,
             server_default=func.now(),
             doc="业务时间",
         ),

@@ -1,19 +1,29 @@
+import asyncio
+import logging
 import pickle
 from datetime import datetime
 
 import numpy as np
-from src import logger
-from src.logger import Logger
+from celery import Task
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import select
+from scipy.interpolate import interp1d
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
-
-from src.config import Config
-from src.dependencies import get_db
+from sqlalchemy.sql import insert, select, update
+from src.background.celery_app import celery_app
 from src.background.tasks.model_tasks import train_fusion_model
+from src.config import Config
+from src.db import engine
+from src.dependencies import get_db
+from src.fd_model import GMM1D
+from src.fd_model.gmm import GMM
+from src.logger import Logger
+from src.orm_model import Devices, Measures, TrainLogs
+from src.services import data_service, nrmock_service
 from src.utils import get_realtime_data
-from src.orm_model import Devices, Measures
+
+from src import logger
 
 router = APIRouter()
 config = Config()
@@ -30,16 +40,19 @@ class TrainModelParams(BaseModel):
 @router.post("/train")
 async def train_fusion_model_background(
     params: TrainModelParams,
+    db: Session = Depends(get_db),
 ):
     """Train model"""
     keys = params.keys
     start_time = params.start_time
     end_time = params.end_time
+    print(params)
 
     for key in keys:
+        print(key)
         train_fusion_model.delay(key, start_time, end_time)
 
-    return {"code": 200, "message": "Model training started", "data": None}
+    return {"code": 200, "message": "Model training started"}
 
 
 class PredictParams(BaseModel):
@@ -56,6 +69,7 @@ async def predict_fusion_model(
     """
     # TODO: need to optimize
     return_data = []
+    model_not_exist = []
     for key in params.keys:
         # get device by key
         device = db.execute(
@@ -81,6 +95,7 @@ async def predict_fusion_model(
 
         # load model
         if not device.model:
+            model_not_exist.append(key)
             return_data.append(
                 {
                     "key": key,
@@ -106,6 +121,8 @@ async def predict_fusion_model(
                 "type": 1,
             }
         )
+    if model_not_exist:
+        logger.warning(f"Flowing model not exist: {model_not_exist}")
 
     return {
         "code": 200,

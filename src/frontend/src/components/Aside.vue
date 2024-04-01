@@ -54,6 +54,14 @@ const menus = router.options.routes.filter(
 <style scoped>
 .aside {
   width: 200px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  /* 菜单栏的高度 */
+  width: 200px;
+  /* 菜单栏的宽度 */
+  overflow-y: auto;
+  /* 当内容溢出时显示滚动条 */
 }
 
 .logo {

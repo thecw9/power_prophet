@@ -1,26 +1,30 @@
 version: "3"
 
 services:
-  redis:
-    container_name: backend_redis
+  power_prophet_redis:
+    container_name: power_prophet_redis
     image: redis:7.2.4-bookworm
     restart: always
+    networks:
+      - power_prophet_backend_network
 
-  postgres:
-    container_name: backend_db
+  power_prophet_backend_db:
+    container_name: power_prophet_backend_db
     image: postgres:16
     restart: always
     environment:
       TZ: Asia/Shanghai
     volumes:
-      - pgdata:/var/lib/postgresql/data/
+      - power_prophet_backend_pgdata:/var/lib/postgresql/data/
     env_file:
       - .dockerenv
     ports:
-      - "5433:5432"
+      - "5434:5432"
+    networks:
+      - power_prophet_backend_network
 
-  backend_app:
-    container_name: backend_app
+  power_prophet_backend_app:
+    container_name: power_prophet_backend_app
     build:
       context: .
       dockerfile: Dockerfile.app
@@ -30,7 +34,7 @@ services:
     volumes:
       - .:/app
     depends_on:
-      - postgres
+      - power_prophet_backend_db
     ports:
       - "8000:8000"
     healthcheck:
@@ -40,9 +44,11 @@ services:
       retries: 50
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - power_prophet_backend_network
 
-  worker:
-    container_name: backend_worker
+  power_prophet_worker:
+    container_name: power_prophet_backend_worker
     build:
       context: .
       dockerfile: Dockerfile.worker
@@ -50,15 +56,17 @@ services:
     environment:
       TZ: Asia/Shanghai
     depends_on:
-      redis:
+      power_prophet_redis:
         condition: service_started
-      backend_app:
+      power_prophet_backend_app:
         condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - power_prophet_backend_network
 
-  beat:
-    container_name: backend_beat
+  power_prophet_beat:
+    container_name: power_prophet_backend_beat
     build:
       context: .
       dockerfile: Dockerfile.beat
@@ -66,12 +74,14 @@ services:
     environment:
       TZ: Asia/Shanghai
     depends_on:
-      - worker
+      - power_prophet_worker
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - power_prophet_backend_network
 
-  flower:
-    container_name: backend_flower
+  power_prophet_flower:
+    container_name: power_prophet_backend_flower
     restart: always
     build:
       context: .
@@ -86,8 +96,14 @@ services:
     ports:
       - 5555:5555
     depends_on:
-      - worker
+      - power_prophet_worker
+    networks:
+      - power_prophet_backend_network
 
 volumes:
-  pgdata:
+  power_prophet_backend_pgdata:
     driver: local
+
+networks:
+  power_prophet_backend_network:
+    driver: bridge
