@@ -59,6 +59,12 @@ const routes = [
         component: () => import("@/views/overall/index.vue"),
       },
       {
+        path: "/alarm",
+        name: "alarm",
+        meta: { title: "告警管理", icon: "menu" },
+        component: () => import("@/views/alarm/index.vue"),
+      },
+      {
         path: "/train_logs",
         name: "train_logs",
         meta: { title: "训练日志", icon: "menu" },

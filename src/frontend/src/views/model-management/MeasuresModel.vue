@@ -3,6 +3,8 @@ import { ref, reactive, onMounted } from "vue";
 import { getMeasuresInfo } from "@/api/measures";
 import { trainModel, modelDescribe } from "@/api/model";
 import { ElNotification, ElMessage } from "element-plus";
+import { formatNumber } from "@/utils/index";
+import TrainAllButton from "@/components/TrainAllButton.vue";
 import * as echarts from "echarts";
 
 const data = ref([]);
@@ -232,12 +234,8 @@ const handleView = async (row) => {
         ></el-input>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="setData">查询</el-button>
-        <el-button type="primary" @click="handleTrainAll">全部训练</el-button>
-        <!-- 查看训练进度 -->
-        <el-button type="primary" @click="handleViewTrainProgress"
-          >查看训练进度</el-button
-        >
+        <el-button type="primary" @click="setData">更新数据</el-button>
+        <TrainAllButton :data="data" :set-data="setData" />
       </el-form-item>
     </el-form>
   </div>

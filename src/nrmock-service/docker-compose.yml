@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   power_prophet_nrmock_db:
     container_name: power_prophet_nrmock_db

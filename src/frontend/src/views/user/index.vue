@@ -1,19 +1,44 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { ElMessageBox, ElNotification } from "element-plus";
-import { getUserList, searchUser, deleteUser } from "@/api/auth";
+import {
+  getUserList,
+  searchUser,
+  deleteUser,
+  addUser,
+  updateUser,
+} from "@/api/auth";
 
-const dialogVisible = ref(false);
+const addUserDialogVisible = ref(false);
+const editUserDialogVisible = ref(false);
+
 const input = ref("");
 const users = ref([]);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
 
+const addForm = ref({
+  username: "",
+  email: "",
+  password: "",
+  is_active: true,
+  is_superuser: false,
+});
+
+const editForm = ref({
+  id: "",
+  username: "",
+  password: "",
+  email: "",
+  is_active: true,
+  is_superuser: false,
+});
+
 const handleClose = () => {
   ElMessageBox.confirm("确认关闭？")
     .then(() => {
-      dialogVisible.value = false;
+      addUserDialogVisible.value = false;
     })
     .catch(() => {});
 };
@@ -21,11 +46,11 @@ const handleClose = () => {
 // get user list
 const setUserListData = async () => {
   const res = await getUserList(currentPage.value, pageSize.value);
-  console.log(res);
   users.value = res.data.list.map((item) => {
     return {
       id: item.id,
       username: item.username,
+      password: item.password,
       email: item.email,
       is_active: item.is_active ? "是" : "否",
       is_superuser: item.is_superuser ? "是" : "否",
@@ -80,24 +105,132 @@ const handleDelete = (id) => {
     })
     .catch(() => {});
 };
+
+// add user
+const handleAddUser = async () => {
+  const res = await addUser(addForm.value);
+  if (res.code === 200) {
+    ElNotification({
+      title: "成功",
+      message: "添加成功",
+      type: "success",
+    });
+    setUserListData();
+  }
+  addUserDialogVisible.value = false;
+};
+
+//
+
+// edit user
+const rowToEditForm = (row) => {
+  editForm.value = {
+    id: row.id,
+    username: row.username,
+    email: row.email,
+    is_active: row.is_active === "是" ? true : false,
+    is_superuser: row.is_superuser === "是" ? true : false,
+  };
+  editUserDialogVisible.value = true;
+};
+
+const handleEditUser = async () => {
+  const res = await updateUser(editForm.value);
+  if (res.code === 200) {
+    ElNotification({
+      title: "成功",
+      message: "编辑成功",
+      type: "success",
+    });
+    setUserListData();
+  }
+  editUserDialogVisible.value = false;
+};
 </script>
 
 <template>
   <div>
     <!-- 新增用户弹窗 -->
     <el-dialog
-      v-model="dialogVisible"
-      title="Tips"
+      v-model="addUserDialogVisible"
+      title="新增用户"
       width="30%"
       :before-close="handleClose"
     >
-      <span>This is a message</span>
+      <el-form label-width="80px">
+        <el-form-item label="用户名">
+          <el-input v-model="addForm.username" />
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="addForm.email" />
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input v-model="addForm.password" />
+        </el-form-item>
+        <el-form-item label="激活">
+          <el-switch
+            v-model="addForm.is_active"
+            active-text="是"
+            inactive-text="否"
+          />
+        </el-form-item>
+        <el-form-item label="管理员">
+          <el-switch
+            v-model="addForm.is_superuser"
+            active-text="是"
+            inactive-text="否"
+          />
+        </el-form-item>
+      </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button class="cancel-btn" @click="dialogVisible = false"
+          <el-button class="cancel-btn" @click="addUserDialogVisible = false"
             >Cancel</el-button
           >
-          <el-button type="primary" @click="dialogVisible = false">
+          <el-button type="primary" @click="handleAddUser"> Confirm </el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 编辑用户弹窗 -->
+    <el-dialog
+      v-model="editUserDialogVisible"
+      title="编辑用户"
+      width="30%"
+      :before-close="handleClose"
+    >
+      <el-form label-width="80px">
+        <el-form-item label="用户名">
+          <el-input v-model="editForm.username" />
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="editForm.email" />
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input v-model="editForm.password" />
+        </el-form-item>
+        <el-form-item label="激活">
+          <el-switch
+            v-model="editForm.is_active"
+            active-text="是"
+            inactive-text="否"
+          />
+        </el-form-item>
+        <el-form-item label="管理员">
+          <el-switch
+            v-model="editForm.is_superuser"
+            active-text="是"
+            inactive-text="否"
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button class="cancel-btn" @click="editUserDialogVisible = false"
+            >Cancel</el-button
+          >
+          <el-button type="primary" @click="handleEditUser">
             Confirm
           </el-button>
         </span>
@@ -106,7 +239,7 @@ const handleDelete = (id) => {
 
     <!-- 新增用户按钮和搜索框 -->
     <div class="input_box">
-      <el-button type="primary" @click="dialogVisible = true"
+      <el-button type="primary" @click="addUserDialogVisible = true"
         >添加用户</el-button
       >
       <div>
@@ -127,7 +260,9 @@ const handleDelete = (id) => {
         <el-table-column prop="updated_at" label="更新时间" />
         <el-table-column label="操作" width="160">
           <template #default="{ row }">
-            <el-button type="primary">编辑</el-button>
+            <el-button type="primary" @click="rowToEditForm(row)"
+              >编辑</el-button
+            >
             <el-button type="danger" @click="handleDelete(row.id)"
               >删除</el-button
             >

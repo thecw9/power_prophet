@@ -13,7 +13,8 @@ const modelDetailDrawer = ref(false);
 const historyDataDrawer = ref(false);
 // last 30 days
 const historyDataTimeRange = ref([
-  new Date(new Date().getTime() - 3600 * 1000 * 24 * 30),
+  // new Date(new Date().getTime() - 3600 * 1000 * 24 * 30),
+  new Date(new Date().getTime() - 3600 * 1000 * 24 * 1),
   new Date(),
 ]);
 const trainDataTimeRange = ref([

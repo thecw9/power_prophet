@@ -25,16 +25,32 @@ export function getUserList(page, size) {
 }
 
 export function searchUser(keyword, page, size_per_page) {
-  const query_params = {
-    keyword: keyword,
+  const params = {
+    sub_str: keyword,
     page: page,
-    size_per_page: size_per_page,
+    size: size_per_page,
   };
-  return axios.get("v1/sys-service/users/search", {
-    params: query_params,
-  });
+  return axios.post("/auth-service/user/search", params);
 }
 
 export function deleteUser(id) {
   return axios.post("/auth-service/user/delete/" + id);
+}
+
+export function addUser(data) {
+  return axios.post("/auth-service/user/add", data, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+export function updateUser(data) {
+  return axios.post("/auth-service/user/update", data, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  });
 }

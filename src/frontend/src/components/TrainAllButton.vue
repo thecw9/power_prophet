@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { trainModel } from "@/api/model";
+import { trainFusionModel } from "@/api/fusion_model";
 import { ElNotification, ElMessage } from "element-plus";
 import { deleteAllTrainLogs } from "@/api/trainlogs";
 
@@ -66,6 +67,10 @@ const shortcuts = [
 ];
 
 const props = defineProps({
+  fusion: {
+    type: Boolean,
+    default: false,
+  },
   data: {
     type: Object,
     default: () => [],
@@ -78,11 +83,20 @@ const handleViewTrainLogs = () => {
 };
 
 const handleTrainAll = async () => {
-  const res = await trainModel(
-    props.data.map((item) => item.key),
-    trainDataTimeRange.value[0],
-    trainDataTimeRange.value[1],
-  );
+  let res = null;
+  if (props.fusion) {
+    res = await trainFusionModel(
+      props.data.map((item) => item.key),
+      trainDataTimeRange.value[0],
+      trainDataTimeRange.value[1],
+    );
+  } else {
+    res = await trainModel(
+      props.data.map((item) => item.key),
+      trainDataTimeRange.value[0],
+      trainDataTimeRange.value[1],
+    );
+  }
   if (res.code === 200) {
     ElNotification({
       title: "模型训练",
