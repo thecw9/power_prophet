@@ -23,7 +23,6 @@ logger = Logger(__name__)
 
 
 class ModelTrainTask(Task):
-
     def before_start(self, *args, **kwargs):
         super().before_start(*args, **kwargs)
         self.start_time = datetime.now()
@@ -115,6 +114,10 @@ def train_model(key: int, start_time: datetime, end_time: datetime):
         raise ValueError("train data is too small")
     model.fit(train_data)
     model_binary = pickle.dumps(model)
+    description = model.describe()
+    threshold_down = description["threshold_down"]
+    threshold_up = description["threshold_up"]
+
     db.execute(
         update(Measures),
         [
@@ -126,6 +129,8 @@ def train_model(key: int, start_time: datetime, end_time: datetime):
                 "model_name": model.__class__.__name__,
                 "model_version": current_model_version + 1,
                 "model_updated_at": datetime.now(),
+                "threshold_up": threshold_up,
+                "threshold_down": threshold_down,
             }
         ],
     )

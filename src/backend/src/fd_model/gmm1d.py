@@ -64,7 +64,6 @@ class GMM1D:
         return np.exp(self.detector_.score_samples(X))
 
     def predict(self, X):
-
         check_is_fitted(self, ["X", "detector_"])
         check_array(X)
         probs = self.predict_proba(X)
@@ -76,7 +75,23 @@ class GMM1D:
         check_is_fitted(self, ["X", "detector_"])
         probs = self.predict_proba(self.probs_density_curve_x_)
         probs_density_curve = np.column_stack((self.probs_density_curve_x_, probs))
+        # down threshold of value to 0.1
         return probs_density_curve
+
+    def _get_threshold(self, probs_density_curve):
+        threshold_up = 0
+        threshold_down = 0
+        for data in probs_density_curve:
+            if data[1] > 0.1:
+                threshold_down = data[0]
+                break
+
+        for data in probs_density_curve[::-1]:
+            if data[1] > 0.1:
+                threshold_up = data[0]
+                break
+
+        return threshold_down, threshold_up
 
     def describe(self):
         check_is_fitted(self, ["X", "detector_"])
@@ -93,6 +108,8 @@ class GMM1D:
             "train_samples_probs": np.squeeze(self.train_samples_probs_).tolist(),
             "n_components": self.n_components,
             "threshold": self.threshold_,
+            "threshold_down": self._get_threshold(self._prob_density_curve())[0],
+            "threshold_up": self._get_threshold(self._prob_density_curve())[1],
         }
 
 
@@ -105,7 +122,8 @@ if __name__ == "__main__":
     gmm = GMM1D(n_components=2).fit(fixed_data)
 
     desc = gmm.describe()
-    print(gmm._prob_density_curve())
+    print(desc)
+    # print(gmm._prob_density_curve())
 
     # plot desc["X"]
     plt.scatter(desc["X"], np.zeros_like(desc["X"]), alpha=0.5)

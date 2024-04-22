@@ -78,6 +78,8 @@ class Measures(Base):
     )
     probability: Mapped[float] = mapped_column(Float, nullable=True, doc="概率")
     threshold: Mapped[float] = mapped_column(Float, nullable=True, doc="概率阈值")
+    threshold_up: Mapped[float] = mapped_column(Float, nullable=True)
+    threshold_down: Mapped[float] = mapped_column(Float, nullable=True)
 
 
 def create_measures_monthly_table(table_name: str) -> Table:
